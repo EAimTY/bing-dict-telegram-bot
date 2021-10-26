@@ -1,0 +1,22 @@
+[package]
+name = "bing-dict-telegram-bot"
+description = "A Telegram bot translates words from Chinese to English or from English to Chinese using Bing Dict"
+version = "0.1.0"
+authors = ["EAimTY <ea.imty@gmail.com>"]
+edition = "2021"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/EAimTY/bing-dict-telegram-bot"
+
+[dependencies]
+bing-dict = "0.1"
+futures-util = "0.3"
+getopts = "0.2"
+tgbot = "0.14"
+thiserror = "1.0"
+tokio = { version = "1.11", features = ["rt-multi-thread", "macros"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
