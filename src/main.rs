@@ -1,5 +1,3 @@
-#![feature(iter_intersperse)]
-
 use crate::config::Config;
 use std::env;
 

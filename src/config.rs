@@ -4,7 +4,6 @@ pub struct Config {
     pub token: String,
     pub proxy: Option<String>,
     pub webhook: u16,
-    pub trigger_with_command: bool,
 }
 
 impl Config {
@@ -29,11 +28,6 @@ impl Config {
             "set webhook port (1 ~ 65535) and run bot in webhook mode",
             "WEBHOOK_PORT",
         );
-        opts.optflag(
-            "c",
-            "trigger-with-command",
-            "trigger translate with command rather than any text message",
-        );
         opts.optflag("h", "help", "print this help menu");
 
         let usage = opts.usage(&format!("Usage: {} -t TELEGRAM-TOKEN [options]", args[0]));
@@ -52,7 +46,6 @@ impl Config {
             webhook: matches
                 .opt_str("w")
                 .map_or_else(|| 0, |port| port.parse().unwrap_or(0)),
-            trigger_with_command: matches.opt_present("c"),
         })
     }
 }

@@ -1,5 +1,6 @@
 use crate::config::Config;
 use futures_util::future::BoxFuture;
+use std::{collections::HashSet, sync::Arc};
 use tgbot::{
     longpoll::LongPoll,
     methods::SendMessage,
@@ -8,6 +9,7 @@ use tgbot::{
     Api, ApiError, Config as ApiConfig, ParseProxyError, UpdateHandler,
 };
 use thiserror::Error;
+use tokio::sync::RwLock;
 
 pub async fn run(config: &Config) -> Result<(), Error> {
     let mut api_config = ApiConfig::new(&config.token);
@@ -19,16 +21,9 @@ pub async fn run(config: &Config) -> Result<(), Error> {
     let api = Api::new(api_config)?;
 
     if config.webhook == 0 {
-        LongPoll::new(api.clone(), Handler::new(api, config.trigger_with_command))
-            .run()
-            .await;
+        LongPoll::new(api.clone(), Handler::new(api)).run().await;
     } else {
-        webhook::run_server(
-            ([0, 0, 0, 0], config.webhook),
-            "/",
-            Handler::new(api, config.trigger_with_command),
-        )
-        .await?;
+        webhook::run_server(([0, 0, 0, 0], config.webhook), "/", Handler::new(api)).await?;
     }
 
     Ok(())
@@ -36,15 +31,15 @@ pub async fn run(config: &Config) -> Result<(), Error> {
 
 #[derive(Clone)]
 struct Handler {
-    api: Api,
-    trigger_with_command: bool,
+    api: Arc<Api>,
+    command_toggle: Arc<RwLock<HashSet<i64>>>,
 }
 
 impl Handler {
-    fn new(api: Api, trigger_with_command: bool) -> Self {
+    fn new(api: Api) -> Self {
         Self {
-            api,
-            trigger_with_command,
+            api: Arc::new(api),
+            command_toggle: Arc::new(RwLock::new(HashSet::new())),
         }
     }
 }
@@ -56,45 +51,63 @@ impl UpdateHandler for Handler {
         let handler = self.clone();
         Box::pin(async move {
             if let UpdateKind::Message(message) = update.kind {
-                let chat_id = message.get_chat_id();
-                let mut input = None;
+                if let Some(text) = message.get_text() {
+                    let chat_id = message.get_chat_id();
+                    let mut result = None;
 
-                if handler.trigger_with_command {
-                    if let Ok(command) = Command::try_from(message) {
-                        if command.get_name() == "/dict" {
-                            input = Some(
-                                command
-                                    .get_args()
-                                    .iter()
-                                    .map(|arg| arg.as_str())
-                                    .intersperse(" ")
-                                    .collect::<String>(),
-                            );
+                    if text.data.starts_with('/') {
+                        if let Ok(command) = Command::try_from(message) {
+                            match command.get_name() {
+                                "/start" => {}
+                                "/dict" => {
+                                    let input =
+                                        command.get_message().get_text().unwrap().data[5..].trim();
+                                    if !input.is_empty() {
+                                        result = match bing_dict::translate(input).await {
+                                            Ok(result) => Some(result.unwrap_or_else(|| {
+                                                String::from("No paraphrase found")
+                                            })),
+                                            Err(err) => {
+                                                eprintln!("{}", err);
+                                                return;
+                                            }
+                                        };
+                                    }
+                                }
+                                "/toggle" => {
+                                    let mut command_toggle = handler.command_toggle.write().await;
+                                    if command_toggle.insert(chat_id) {
+                                        result = Some(String::from("OK. I will translate all non-command messages you send"));
+                                    } else {
+                                        command_toggle.remove(&chat_id);
+                                        result = Some(String::from("OK. I will only translate the words after the /dict command"));
+                                    }
+                                }
+                                "/help" => {}
+                                "/about" => {}
+                                _ => {}
+                            }
                         }
-                    }
-                } else if let Some(text) = message.get_text() {
-                    input = Some(text.data.clone());
-                }
-
-                if let Some(input) = input {
-                    let result = match bing_dict::translate(&input).await {
-                        Ok(result) => result,
-                        Err(err) => {
-                            eprintln!("{}", err);
-                            return;
-                        }
-                    };
-
-                    let send_message;
-                    if let Some(result) = result {
-                        send_message = SendMessage::new(chat_id, result);
                     } else {
-                        send_message = SendMessage::new(chat_id, "No paraphrase");
+                        let command_toggle = handler.command_toggle.read().await;
+                        if command_toggle.contains(&chat_id) {
+                            result = match bing_dict::translate(&text.data).await {
+                                Ok(result) => Some(
+                                    result.unwrap_or_else(|| String::from("No paraphrase found")),
+                                ),
+                                Err(err) => {
+                                    eprintln!("{}", err);
+                                    return;
+                                }
+                            }
+                        }
                     }
 
-                    match handler.api.execute(send_message).await {
-                        Ok(_) => (),
-                        Err(err) => eprintln!("{}", err),
+                    if let Some(result) = result {
+                        match handler.api.execute(SendMessage::new(chat_id, result)).await {
+                            Ok(_) => (),
+                            Err(err) => eprintln!("{}", err),
+                        }
                     }
                 }
             }
