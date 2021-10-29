@@ -1,4 +1,4 @@
-# bing-dict
+# bing-dict-telegram-bot
 
 A Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
 

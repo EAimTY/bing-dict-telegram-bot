@@ -61,7 +61,6 @@ impl UpdateHandler for Handler {
                     if text.data.starts_with('/') {
                         if let Ok(command) = Command::try_from(message) {
                             match command.get_name() {
-                                "/start" => {}
                                 "/dict" => {
                                     let input =
                                         command.get_message().get_text().unwrap().data[5..].trim();
@@ -86,8 +85,37 @@ impl UpdateHandler for Handler {
                                         result = Some(String::from("OK. I will only translate the words after the /dict command"));
                                     }
                                 }
-                                "/help" => {}
-                                "/about" => {}
+                                "/start" => {
+                                    result = Some(String::from(
+                                        r#"
+This is a Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
+
+/dict [word] - translate a word
+/toggle - toggle translate-all-messages mode for current chat
+
+Use "/help" to get more information.
+"#,
+                                    ));
+                                }
+                                "/about" => {
+                                    result = Some(String::from(
+                                        r#"
+A Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
+
+https://github.com/EAimTY/bing-dict-telegram-bot
+"#,
+                                    ));
+                                }
+                                "/help" => {
+                                    result = Some(String::from(
+                                        r#"
+/dict [word] - translate a word
+/toggle - toggle translate-all-messages mode for current chat
+/about - About this bot
+/help - Get this help message
+"#,
+                                    ));
+                                }
                                 _ => {}
                             }
                         }
