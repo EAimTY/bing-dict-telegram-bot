@@ -3,8 +3,8 @@ use futures_util::future::BoxFuture;
 use std::{collections::HashSet, sync::Arc};
 use tgbot::{
     longpoll::LongPoll,
-    methods::{GetMe, SendMessage},
-    types::{Command, Me, MessageKind, Update, UpdateKind},
+    methods::{GetMe, SendMessage, SetMyCommands},
+    types::{BotCommand, Command, Me, MessageKind, Update, UpdateKind},
     webhook::{self, HyperError},
     Api, ApiError, Config as ApiConfig, ExecuteError, ParseProxyError, UpdateHandler,
 };
@@ -21,6 +21,16 @@ pub async fn run(config: &Config) -> Result<(), Error> {
     let api = Api::new(api_config)?;
 
     let bot_info = api.execute(GetMe).await?;
+
+    let commands = vec![
+        BotCommand::new("dict", "[word / phrase] - Translate a word or phrase"),
+        BotCommand::new("toggle_command", "Toggle translate-all-messages mode for the current chat (default: off)"),
+        BotCommand::new("toggle_mention", "Toggle if I should only react to non-command messages that mentions. This only works in groups. You still need to @ me when using command (default: on)"),
+        BotCommand::new("about", "About this bot"),
+        BotCommand::new("help", "Get this help message"),
+    ].into_iter().flatten();
+
+    api.execute(SetMyCommands::new(commands)).await?;
 
     if config.webhook == 0 {
         println!("Running in longpoll mode");
@@ -230,7 +240,7 @@ impl UpdateHandler for Handler {
                                         r#"
 This is a Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
 
-/dict [word / phrase] - Translate a word / phrase
+/dict [word / phrase] - Translate a word or phrase
 /toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
 /toggle_mention - Toggle if I should only react to non-command messages that mentions me in the group. You still need to @ me when using command (default: on)
 
@@ -242,7 +252,7 @@ Use "/help" to get more information.
                                 "/about" => {
                                     result = Some(String::from(
                                         r#"
-A Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
+A Telegram bot uses Bing Dictionary to translate words and phrases from Chinese to English or English to Chinese.
 
 https://github.com/EAimTY/bing-dict-telegram-bot
 "#,
@@ -252,7 +262,7 @@ https://github.com/EAimTY/bing-dict-telegram-bot
                                 "/help" => {
                                     result = Some(String::from(
                                         r#"
-/dict [word / phrase] - Translate a word / phrase
+/dict [word / phrase] - Translate a word or phrase
 /toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
 /toggle_mention - Toggle if I should only react to non-command messages that mentions me in the group. You still need to @ me when using command (default: on)
 /about - About this bot

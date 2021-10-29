@@ -19,7 +19,7 @@ Options:
 In chat:
 
 ```
-/dict [word / phrase] - Translate a word / phrase
+/dict [word / phrase] - Translate a word or phrase
 /toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
 /toggle_mention - Toggle if I should only react to non-command messages that mentions me in the group. You still need to @ me when using command (default: on)
 /about - About this bot
