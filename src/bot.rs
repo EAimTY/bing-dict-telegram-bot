@@ -29,18 +29,20 @@ pub async fn run(config: &Config) -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Clone)]
-struct Handler {
-    api: Arc<Api>,
-    command_toggle: Arc<RwLock<HashSet<i64>>>,
+struct Context {
+    api: Api,
+    command_toggle: RwLock<HashSet<i64>>,
 }
+
+#[derive(Clone)]
+struct Handler(Arc<Context>);
 
 impl Handler {
     fn new(api: Api) -> Self {
-        Self {
-            api: Arc::new(api),
-            command_toggle: Arc::new(RwLock::new(HashSet::new())),
-        }
+        Self(Arc::new(Context {
+            api,
+            command_toggle: RwLock::new(HashSet::new()),
+        }))
     }
 }
 
@@ -48,7 +50,8 @@ impl UpdateHandler for Handler {
     type Future = BoxFuture<'static, ()>;
 
     fn handle(&self, update: Update) -> Self::Future {
-        let handler = self.clone();
+        let context = self.0.clone();
+
         Box::pin(async move {
             if let UpdateKind::Message(message) = update.kind {
                 if let Some(text) = message.get_text() {
@@ -75,7 +78,7 @@ impl UpdateHandler for Handler {
                                     }
                                 }
                                 "/toggle" => {
-                                    let mut command_toggle = handler.command_toggle.write().await;
+                                    let mut command_toggle = context.command_toggle.write().await;
                                     if command_toggle.insert(chat_id) {
                                         result = Some(String::from("OK. I will translate all non-command messages you send"));
                                     } else {
@@ -89,7 +92,7 @@ impl UpdateHandler for Handler {
                             }
                         }
                     } else {
-                        let command_toggle = handler.command_toggle.read().await;
+                        let command_toggle = context.command_toggle.read().await;
                         if command_toggle.contains(&chat_id) {
                             result = match bing_dict::translate(&text.data).await {
                                 Ok(result) => Some(
@@ -104,7 +107,7 @@ impl UpdateHandler for Handler {
                     }
 
                     if let Some(result) = result {
-                        match handler.api.execute(SendMessage::new(chat_id, result)).await {
+                        match context.api.execute(SendMessage::new(chat_id, result)).await {
                             Ok(_) => (),
                             Err(err) => eprintln!("{}", err),
                         }
