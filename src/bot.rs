@@ -105,10 +105,11 @@ impl UpdateHandler for Handler {
 
                             // Trim the argument that mentions the bot
                             if text.starts_with(&context.bot_username) {
-                                input = Some(text[context.bot_username.len()..].trim());
+                                input = Some(text[context.bot_username.len()..].trim_start());
                             } else if text.ends_with(&context.bot_username) {
-                                input =
-                                    Some(text[..text.len() - context.bot_username.len()].trim());
+                                input = Some(
+                                    text[..text.len() - context.bot_username.len()].trim_end(),
+                                );
                             }
 
                             if let Some(input) = input {
@@ -131,18 +132,22 @@ impl UpdateHandler for Handler {
                         // The Position of the argument that mentions the bot in the command
                         #[derive(PartialEq)]
                         enum ArgPos {
-                            Left,
-                            Right,
+                            Start,
+                            End,
                             None,
                         }
+
+                        let text = &command.get_message().get_text().unwrap().data
+                            [command.get_name().len()..]
+                            .trim_start();
 
                         let mut pos = ArgPos::None;
 
                         // Get the argument position
-                        if command.get_args().first() == Some(&context.bot_username) {
-                            pos = ArgPos::Left;
-                        } else if command.get_args().last() == Some(&context.bot_username) {
-                            pos = ArgPos::Right;
+                        if text.starts_with(&context.bot_username) {
+                            pos = ArgPos::Start;
+                        } else if text.ends_with(&context.bot_username) {
+                            pos = ArgPos::End;
                         }
 
                         // Only handle the command if the chat is private or there is a argument that mentions the bot in the command
@@ -159,20 +164,20 @@ impl UpdateHandler for Handler {
 
                                     match pos {
                                         // Trim the command and the argument that mentions the bot
-                                        ArgPos::Left => {
+                                        ArgPos::Start => {
                                             input = Some(
                                                 command.get_message().get_text().unwrap().data[5..]
-                                                    .trim()
+                                                    .trim_start()
                                                     .trim_start_matches(&context.bot_username)
-                                                    .trim(),
+                                                    .trim_start(),
                                             )
                                         }
-                                        ArgPos::Right => {
+                                        ArgPos::End => {
                                             input = Some(
                                                 command.get_message().get_text().unwrap().data[5..]
-                                                    .trim()
+                                                    .trim_start()
                                                     .trim_end_matches(&context.bot_username)
-                                                    .trim(),
+                                                    .trim_end(),
                                             )
                                         }
                                         // No mentioning argument found, so this message must be sent in a private chat
@@ -180,7 +185,7 @@ impl UpdateHandler for Handler {
                                         ArgPos::None => {
                                             input = Some(
                                                 command.get_message().get_text().unwrap().data[5..]
-                                                    .trim(),
+                                                    .trim_start(),
                                             )
                                         }
                                     }
@@ -238,7 +243,7 @@ impl UpdateHandler for Handler {
                                 "/start" => {
                                     result = Some(String::from(
                                         r#"
-This is a Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
+This Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese.
 
 /dict [word / phrase] - Translate a word or phrase
 /toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
