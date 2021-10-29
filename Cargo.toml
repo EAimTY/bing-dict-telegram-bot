@@ -1,6 +1,6 @@
 [package]
 name = "bing-dict-telegram-bot"
-description = "A Telegram bot uses Bing Dictionary to translate words from Chinese to English or English to Chinese"
+description = "A Telegram bot uses Bing Dictionary to translate words and phrases from Chinese to English or English to Chinese"
 version = "0.2.2"
 authors = ["EAimTY <ea.imty@gmail.com>"]
 edition = "2021"
