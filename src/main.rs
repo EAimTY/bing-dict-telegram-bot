@@ -1,8 +1,11 @@
+#![feature(try_blocks)]
+
 use crate::config::Config;
 use std::env;
 
 mod bot;
 mod config;
+mod handler;
 
 #[tokio::main]
 async fn main() {
