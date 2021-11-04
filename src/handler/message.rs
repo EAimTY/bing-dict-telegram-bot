@@ -8,19 +8,16 @@ impl Handler {
     pub async fn handle_message(context: &Context, message: Message) -> Result<(), HandlerError> {
         let chat_id = message.get_chat_id();
 
-        let command_toggle = context.command_toggle.read().await;
+        let message_trigger = context.message_trigger.read().await;
 
         // Only handle the message if the chat is in the non-command-triggering list
-        if command_toggle.contains(&chat_id) {
+        if message_trigger.contains(&chat_id) {
             let text = message.get_text().unwrap().data.trim();
             let mut input = None;
 
-            let mention_toggle = context.mention_toggle.read().await;
-
             // Check if the chat is in the triggering-without-mention list or the chat is private
-            if mention_toggle.contains(&chat_id)
-                || (!matches!(message.kind, MessageKind::Group { .. })
-                    && !matches!(message.kind, MessageKind::Supergroup { .. }))
+            if !matches!(message.kind, MessageKind::Group { .. })
+                && !matches!(message.kind, MessageKind::Supergroup { .. })
             {
                 input = Some(text);
             }

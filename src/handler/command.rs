@@ -80,36 +80,13 @@ impl Handler {
                     }
                 }
 
-                "/toggle_command" => {
-                    let mut command_toggle = context.command_toggle.write().await;
-                    let result = if command_toggle.insert(chat_id) {
-                        String::from("Okay. I will translate all non-command messages you send")
+                "/toggle" => {
+                    let mut message_trigger = context.message_trigger.write().await;
+                    let result = if message_trigger.insert(chat_id) {
+                        String::from("Okay. I will translate all non-command messages you send (You still need to @ me if it is in a group)")
                     } else {
-                        command_toggle.remove(&chat_id);
+                        message_trigger.remove(&chat_id);
                         String::from("OK. I will only translate the words after the /dict command")
-                    };
-                    context
-                        .api
-                        .execute(SendMessage::new(chat_id, result))
-                        .await?;
-                }
-
-                "/toggle_mention" => {
-                    // Only handle the command in group chats
-                    let result = if matches!(command.get_message().kind, MessageKind::Group { .. })
-                        || matches!(command.get_message().kind, MessageKind::Supergroup { .. })
-                    {
-                        let mut mention_toggle = context.mention_toggle.write().await;
-                        if mention_toggle.insert(chat_id) {
-                            String::from("Okay. Now you don't need to @ me to trigger a non-command message translation anymore")
-                        } else {
-                            mention_toggle.remove(&chat_id);
-                            String::from(
-                                "Fine. I will only react to non-command messages that mentioned me",
-                            )
-                        }
-                    } else {
-                        String::from("Hmm...This is not a group chat")
                     };
                     context
                         .api
@@ -123,8 +100,7 @@ impl Handler {
 This Telegram bot uses Bing Dictionary to translate words and phrases from Chinese to English or English to Chinese.
 
 /dict [word / phrase] - Translate a word or phrase
-/toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
-/toggle_mention - Toggle if I should only react to non-command messages that mentions me in the group. You still need to @ me when using command (default: on)
+/toggle - Switch to the mode of translating all messages in the current chat (@ me is required if it is a group)
 
 Use "/help" to get more information.
 "#,
@@ -153,8 +129,7 @@ https://github.com/EAimTY/bing-dict-telegram-bot
                     let result = String::from(
                         r#"
 /dict [word / phrase] - Translate a word or phrase
-/toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
-/toggle_mention - Toggle if I should only react to non-command messages that mentions me in the group. You still need to @ me when using command (default: on)
+/toggle - Switch to the mode of translating all messages in the current chat (@ me is required if it is a group)
 /about - About this bot
 /help - Get this help message
 "#,

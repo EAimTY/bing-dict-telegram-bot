@@ -14,8 +14,7 @@ mod message;
 pub struct Context {
     api: Api,
     bot_username: String,
-    command_toggle: RwLock<HashSet<i64>>,
-    mention_toggle: RwLock<HashSet<i64>>,
+    message_trigger: RwLock<HashSet<i64>>,
 }
 
 #[derive(Clone)]
@@ -26,8 +25,7 @@ impl Handler {
         Self(Arc::new(Context {
             api,
             bot_username: format!("@{}", bot_info.username),
-            command_toggle: RwLock::new(HashSet::new()),
-            mention_toggle: RwLock::new(HashSet::new()),
+            message_trigger: RwLock::new(HashSet::new()),
         }))
     }
 }

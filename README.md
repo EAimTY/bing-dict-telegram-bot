@@ -20,13 +20,14 @@ In chat:
 
 ```
 /dict [word / phrase] - Translate a word or phrase
-/toggle_command - Toggle translate-all-messages mode for the current chat (default: off)
-/toggle_mention - Toggle if I should only react to non-command messages that mentions me in the group. You still need to @ me when using command (default: on)
+/toggle - Switch to the mode of translating all messages in the current chat (@ the bot is required if it is a group)
 /about - About this bot
 /help - Get this help message
 ```
 
 ## Build
+
+Rust Nightly is required.
 
 ```bash
 $ git clone https://github.com/EAimTY/bing-dict-telegram-bot && cd bing-dict-telegram-bot
