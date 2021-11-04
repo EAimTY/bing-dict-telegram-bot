@@ -1,11 +1,12 @@
 use bing_dict::Error as BingDictError;
 use futures_util::future::BoxFuture;
-use std::{collections::HashSet, sync::Arc};
+use std::sync::Arc;
 use tgbot::{
     types::{Command, Me, Update, UpdateKind},
     Api, ExecuteError, UpdateHandler,
 };
 use thiserror::Error;
+use tinyset::Set64;
 use tokio::sync::RwLock;
 
 mod command;
@@ -14,7 +15,7 @@ mod message;
 pub struct Context {
     api: Api,
     bot_username: String,
-    message_trigger: RwLock<HashSet<i64>>,
+    message_trigger: RwLock<Set64<i64>>,
 }
 
 #[derive(Clone)]
@@ -25,7 +26,7 @@ impl Handler {
         Self(Arc::new(Context {
             api,
             bot_username: format!("@{}", bot_info.username),
-            message_trigger: RwLock::new(HashSet::new()),
+            message_trigger: RwLock::new(Set64::new()),
         }))
     }
 }

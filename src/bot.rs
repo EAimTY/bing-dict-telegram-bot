@@ -21,8 +21,7 @@ pub async fn run(config: &Config) -> Result<(), Error> {
 
     let commands = vec![
         BotCommand::new("dict", "[word / phrase] - Translate a word or phrase"),
-        BotCommand::new("toggle_command", "Toggle translate-all-messages mode for the current chat (default: off)"),
-        BotCommand::new("toggle_mention", "Toggle if I should only react to non-command messages that mentions. This only works in groups. You still need to @ me when using command (default: on)"),
+        BotCommand::new("toggle", "Switch to the mode of translating all messages in the current chat (@ me is required if it is a group)"),
         BotCommand::new("about", "About this bot"),
         BotCommand::new("help", "Get this help message"),
     ].into_iter().flatten();

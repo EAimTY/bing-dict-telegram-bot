@@ -10,19 +10,16 @@ impl Handler {
 
         let message_trigger = context.message_trigger.read().await;
 
-        // Only handle the message if the chat is in the non-command-triggering list
         if message_trigger.contains(&chat_id) {
             let text = message.get_text().unwrap().data.trim();
             let mut input = None;
 
-            // Check if the chat is in the triggering-without-mention list or the chat is private
             if !matches!(message.kind, MessageKind::Group { .. })
                 && !matches!(message.kind, MessageKind::Supergroup { .. })
             {
                 input = Some(text);
             }
 
-            // Trim the argument that mentions the bot
             if text.starts_with(&context.bot_username) {
                 input = Some(text[context.bot_username.len()..].trim_start());
             } else if text.ends_with(&context.bot_username) {

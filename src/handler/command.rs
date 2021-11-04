@@ -8,7 +8,6 @@ impl Handler {
     pub async fn handle_command(context: &Context, command: Command) -> Result<(), HandlerError> {
         let chat_id = command.get_message().get_chat_id();
 
-        // The Position of the argument that mentions the bot in the command
         #[derive(PartialEq)]
         enum ArgPos {
             Start,
@@ -21,14 +20,12 @@ impl Handler {
 
         let mut pos = ArgPos::None;
 
-        // Get the argument position
         if text.starts_with(&context.bot_username) {
             pos = ArgPos::Start;
         } else if text.ends_with(&context.bot_username) {
             pos = ArgPos::End;
         }
 
-        // Only handle the command if the chat is private or there is a argument that mentions the bot in the command
         if pos != ArgPos::None
             || (!matches!(command.get_message().kind, MessageKind::Group { .. })
                 && !matches!(command.get_message().kind, MessageKind::Supergroup { .. }))
@@ -38,7 +35,6 @@ impl Handler {
                     let input;
 
                     match pos {
-                        // Trim the command and the argument that mentions the bot
                         ArgPos::Start => {
                             input = Some(
                                 command.get_message().get_text().unwrap().data[5..]
@@ -55,8 +51,6 @@ impl Handler {
                                     .trim_end(),
                             )
                         }
-                        // No mentioning argument found, so this message must be sent in a private chat
-                        // Trim the command
                         ArgPos::None => {
                             input = Some(
                                 command.get_message().get_text().unwrap().data[5..].trim_start(),
