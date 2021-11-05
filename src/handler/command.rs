@@ -1,7 +1,7 @@
 use super::{Context, Handler, HandlerError};
 use tgbot::{
     methods::SendMessage,
-    types::{Command, MessageKind},
+    types::{Command, MessageKind, ParseMode},
 };
 
 impl Handler {
@@ -77,31 +77,36 @@ impl Handler {
                 "/toggle" => {
                     let mut message_trigger = context.message_trigger.write().await;
                     let result = if message_trigger.insert(chat_id) {
-                        String::from("Okay. I will translate all non-command messages you send (You still need to @ me if it is in a group)")
+                        format!("Okay. I will translate all non-command messages you send (You still need to <i>{}</i> if it is in a group)", context.bot_username)
                     } else {
                         message_trigger.remove(&chat_id);
                         String::from("OK. I will only translate the words after the /dict command")
                     };
+
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result))
+                        .execute(SendMessage::new(chat_id, result).parse_mode(ParseMode::Html))
                         .await?;
                 }
 
                 "/start" => {
-                    let result = String::from(
+                    let result = format!(
                         r#"
 This Telegram bot uses Bing Dictionary to translate words and phrases from Chinese to English or English to Chinese.
 
-/dict [word / phrase] - Translate a word or phrase
-/toggle - Switch to the mode of translating all messages in the current chat (@ me is required if it is a group)
+/dict <i>[word / phrase]</i> - Translate a word or phrase
+/toggle - Switch to the mode of translating all messages in the current chat (<i>{}</i> is required if it is a group)
 
-Use "/help" to get more information.
+Or just enter <i>{} word / phrase</i> in any chat and select the result when you need a translate
+
+Use <i>/help</i> to get more information.
 "#,
+                        context.bot_username, context.bot_username
                     );
+
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result))
+                        .execute(SendMessage::new(chat_id, result).parse_mode(ParseMode::Html))
                         .await?;
                 }
 
@@ -113,6 +118,7 @@ A Telegram bot uses Bing Dictionary to translate words and phrases from Chinese 
 https://github.com/EAimTY/bing-dict-telegram-bot
 "#,
                     );
+
                     context
                         .api
                         .execute(SendMessage::new(chat_id, result))
@@ -120,17 +126,21 @@ https://github.com/EAimTY/bing-dict-telegram-bot
                 }
 
                 "/help" => {
-                    let result = String::from(
+                    let result = format!(
                         r#"
-/dict [word / phrase] - Translate a word or phrase
-/toggle - Switch to the mode of translating all messages in the current chat (@ me is required if it is a group)
+/dict <i>[word / phrase]</i> - Translate a word or phrase
+/toggle - Switch to the mode of translating all messages in the current chat (<i>{}</i> is required if it is a group)
 /about - About this bot
 /help - Get this help message
+
+When you need a translate, just enter <i>{} word / phrase</i> in any chat and select the result 
 "#,
+                        context.bot_username, context.bot_username
                     );
+
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result))
+                        .execute(SendMessage::new(chat_id, result).parse_mode(ParseMode::Html))
                         .await?;
                 }
 

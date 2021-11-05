@@ -20,10 +20,14 @@ In chat:
 
 ```
 /dict [word / phrase] - Translate a word or phrase
-/toggle - Switch to the mode of translating all messages in the current chat (@ the bot is required if it is a group)
+/toggle - Switch to the mode of translating all messages in the current chat (@bot_username is required if it is a group)
 /about - About this bot
 /help - Get this help message
 ```
+
+Or using inline mode (inline mode for bot needs to be enabled in `@botfather` settings):
+
+Just enter `@bot_username word / phrase` in any chat and select the result when you need a translate
 
 ## Build
 

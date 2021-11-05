@@ -10,6 +10,7 @@ use tinyset::Set64;
 use tokio::sync::RwLock;
 
 mod command;
+mod inline_query;
 mod message;
 
 pub struct Context {
@@ -39,16 +40,23 @@ impl UpdateHandler for Handler {
 
         Box::pin(async move {
             let result: Result<(), HandlerError> = try {
-                if let UpdateKind::Message(message) = update.kind {
-                    if let Some(text) = message.get_text() {
-                        if !text.data.starts_with('/') {
-                            Self::handle_message(&context, message).await?;
-                        } else if let Ok(command) = Command::try_from(message) {
-                            Self::handle_command(&context, command).await?;
+                match update.kind {
+                    UpdateKind::Message(message) => {
+                        if let Some(text) = message.get_text() {
+                            if !text.data.starts_with('/') {
+                                Self::handle_message(&context, message).await?;
+                            } else if let Ok(command) = Command::try_from(message) {
+                                Self::handle_command(&context, command).await?;
+                            }
                         }
                     }
+                    UpdateKind::InlineQuery(inline_query) => {
+                        Self::handle_inline_query(&context, inline_query).await?;
+                    }
+                    _ => {}
                 }
             };
+
             match result {
                 Ok(()) => {}
                 Err(err) => eprintln!("{}", err),
