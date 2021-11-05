@@ -7,6 +7,7 @@ use tgbot::{
 impl Handler {
     pub async fn handle_command(context: &Context, command: Command) -> Result<(), HandlerError> {
         let chat_id = command.get_message().get_chat_id();
+        let message_id = command.get_message().id;
 
         #[derive(PartialEq)]
         enum ArgPos {
@@ -69,7 +70,9 @@ impl Handler {
 
                         context
                             .api
-                            .execute(SendMessage::new(chat_id, result))
+                            .execute(
+                                SendMessage::new(chat_id, result).reply_to_message_id(message_id),
+                            )
                             .await?;
                     }
                 }
@@ -85,7 +88,11 @@ impl Handler {
 
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result).parse_mode(ParseMode::Html))
+                        .execute(
+                            SendMessage::new(chat_id, result)
+                                .parse_mode(ParseMode::Html)
+                                .reply_to_message_id(message_id),
+                        )
                         .await?;
                 }
 
@@ -106,7 +113,11 @@ Use <i>/help</i> to get more information.
 
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result).parse_mode(ParseMode::Html))
+                        .execute(
+                            SendMessage::new(chat_id, result)
+                                .parse_mode(ParseMode::Html)
+                                .reply_to_message_id(message_id),
+                        )
                         .await?;
                 }
 
@@ -121,7 +132,7 @@ https://github.com/EAimTY/bing-dict-telegram-bot
 
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result))
+                        .execute(SendMessage::new(chat_id, result).reply_to_message_id(message_id))
                         .await?;
                 }
 
@@ -140,7 +151,11 @@ When you need a translate, just enter <i>{} word / phrase</i> in any chat and se
 
                     context
                         .api
-                        .execute(SendMessage::new(chat_id, result).parse_mode(ParseMode::Html))
+                        .execute(
+                            SendMessage::new(chat_id, result)
+                                .parse_mode(ParseMode::Html)
+                                .reply_to_message_id(message_id),
+                        )
                         .await?;
                 }
 

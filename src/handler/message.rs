@@ -7,6 +7,7 @@ use tgbot::{
 impl Handler {
     pub async fn handle_message(context: &Context, message: Message) -> Result<(), HandlerError> {
         let chat_id = message.get_chat_id();
+        let message_id = message.id;
 
         let message_trigger = context.message_trigger.read().await;
 
@@ -37,7 +38,7 @@ impl Handler {
 
                 context
                     .api
-                    .execute(SendMessage::new(chat_id, result))
+                    .execute(SendMessage::new(chat_id, result).reply_to_message_id(message_id))
                     .await?;
             }
         }
