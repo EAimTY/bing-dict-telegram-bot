@@ -61,9 +61,10 @@ impl Handler {
 
                     if let Some(input) = input {
                         let result = if !input.is_empty() {
-                            bing_dict::translate(input)
-                                .await?
-                                .unwrap_or_else(|| String::from("No paraphrase found"))
+                            bing_dict::translate(input).await?.map_or_else(
+                                || String::from("No paraphrase found"),
+                                |paraphrase| paraphrase.to_string(),
+                            )
                         } else {
                             String::from("No input")
                         };

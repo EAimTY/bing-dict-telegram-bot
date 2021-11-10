@@ -15,9 +15,10 @@ impl Handler {
         let InlineQuery { id, query, .. } = inline_query;
 
         let inline_query_result = if !query.is_empty() {
-            let translate_result = bing_dict::translate(&query)
-                .await?
-                .unwrap_or_else(|| String::from("No paraphrase found"));
+            let translate_result = bing_dict::translate(&query).await?.map_or_else(
+                || String::from("No paraphrase found"),
+                |paraphrase| paraphrase.to_string(),
+            );
 
             vec![InlineQueryResult::Article(InlineQueryResultArticle::new(
                 query,
