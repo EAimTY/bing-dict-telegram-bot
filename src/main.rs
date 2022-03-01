@@ -1,7 +1,6 @@
-#![feature(try_blocks)]
-
-use crate::config::Config;
-use std::env;
+use crate::config::ConfigBuilder;
+pub use crate::{config::Config, handler::Handler};
+use std::{env, process};
 
 mod bot;
 mod config;
@@ -9,18 +8,20 @@ mod handler;
 
 #[tokio::main]
 async fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args = env::args().collect::<Vec<_>>();
 
-    let config = match Config::parse(args) {
-        Ok(config) => config,
+    let mut cfg_builder = ConfigBuilder::new();
+
+    let cfg = match cfg_builder.parse(&args) {
+        Ok(cfg) => cfg,
         Err(err) => {
-            eprintln!("{}", err);
-            return;
+            eprintln!("{err}");
+            process::exit(1);
         }
     };
 
-    match bot::run(&config).await {
-        Ok(()) => (),
-        Err(err) => eprintln!("{}", err),
+    if let Err(err) = bot::run(cfg).await {
+        eprintln!("{err}");
+        process::exit(1);
     }
 }

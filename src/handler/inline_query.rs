@@ -1,4 +1,5 @@
-use super::{Context, Handler, HandlerError};
+use super::Context;
+use anyhow::Result;
 use tgbot::{
     methods::AnswerInlineQuery,
     types::{
@@ -7,33 +8,26 @@ use tgbot::{
     },
 };
 
-impl Handler {
-    pub async fn handle_inline_query(
-        context: &Context,
-        inline_query: InlineQuery,
-    ) -> Result<(), HandlerError> {
-        let InlineQuery { id, query, .. } = inline_query;
+pub async fn handle_inline_query(cx: &Context, query: &InlineQuery) -> Result<()> {
+    let InlineQuery { id, query, .. } = query;
 
-        let inline_query_result = if !query.is_empty() {
-            let translate_result = bing_dict::translate(&query).await?.map_or_else(
-                || String::from("No paraphrase found"),
-                |paraphrase| paraphrase.to_string(),
-            );
+    let res = if !query.is_empty() {
+        let res = bing_dict::translate(query).await?.map_or_else(
+            || String::from("No paraphrase found"),
+            |paraphrase| paraphrase.to_string(),
+        );
 
-            vec![InlineQueryResult::Article(InlineQueryResultArticle::new(
-                query,
-                translate_result.clone(),
-                InputMessageContent::Text(InputMessageContentText::new(translate_result)),
-            ))]
-        } else {
-            Vec::new()
-        };
+        vec![InlineQueryResult::Article(InlineQueryResultArticle::new(
+            query,
+            res.clone(),
+            InputMessageContent::Text(InputMessageContentText::new(res)),
+        ))]
+    } else {
+        Vec::new()
+    };
 
-        context
-            .api
-            .execute(AnswerInlineQuery::new(id, inline_query_result))
-            .await?;
+    let answer_inline_query = AnswerInlineQuery::new(id, res);
+    cx.api.execute(answer_inline_query).await?;
 
-        Ok(())
-    }
+    Ok(())
 }

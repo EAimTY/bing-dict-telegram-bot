@@ -1,23 +1,28 @@
 [package]
 name = "bing-dict-telegram-bot"
-description = "A Telegram bot uses Bing Dictionary to translate words and phrases from Chinese to English or English to Chinese"
+description = "A Telegram bot using Bing Dictionary to translate words and phrases between English and Chinese"
 version = "0.5.2"
 authors = ["EAimTY <ea.imty@gmail.com>"]
 edition = "2021"
+rust-version = "1.59"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/EAimTY/bing-dict-telegram-bot"
 
 [dependencies]
-bing-dict = "0.2"
+anyhow = "1.0"
+bing-dict = "0.3"
 futures-util = "0.3"
 getopts = "0.2"
-tgbot = "0.14"
-thiserror = "1.0"
-tinyset = "0.4"
-tokio = { version = "1.13", features = ["rt-multi-thread", "macros"] }
+jsave = { version = "0.2", features = ["send_guard"] }
+nohash-hasher = "0.2"
+reqwest = { version = "0.11", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+tgbot = "0.18"
+tokio = { version = "1.17", features = ["rt-multi-thread", "macros"] }
 
 [profile.release]
 lto = true
+strip = true
 codegen-units = 1
 panic = "abort"

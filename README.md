@@ -1,19 +1,21 @@
 # bing-dict-telegram-bot
 
-A Telegram bot uses Bing Dictionary to translate words and phrases from Chinese to English or English to Chinese.
+A Telegram bot using Bing Dictionary to translate words and phrases between English and Chinese
 
 ## Usage
 
 ```
-Usage: bing-dict-telegram-bot -t TELEGRAM-TOKEN [options]
+Usage: bing-dict-telegram-bot [options]
 
 Options:
-    -t, --token TOKEN   (required) set Telegram Bot HTTP API token
-    -p, --proxy PROXY   set proxy (supported: http, https, socks5)
+    -t, --token TOKEN   Set the Telegram Bot HTTP API token (required)
+    -d, --database DATABASE_FILE
+                        Set the database JSON file location (required)
     -w, --webhook-port WEBHOOK_PORT
-                        set webhook port (1 ~ 65535) and run bot in webhook
-                        mode
-    -h, --help          print this help menu
+                        Run in webhook mode listening port (1 ~ 65535)
+        --proxy PROXY   Set proxy (supported: http, https, socks5)
+    -v, --version       Print the version
+    -h, --help          Print this help menu
 ```
 
 In chat:
@@ -27,11 +29,11 @@ In chat:
 
 Or using inline mode (inline mode for bot needs to be enabled in `@botfather` settings):
 
-Just enter `@bot_username word / phrase` in any chat and select the result when you need a translate
+Just enter `@bot_username word / phrase` in any chat and select the result
 
 ## Build
 
-Rust Nightly is required.
+Require Rust 1.59 or above
 
 ```bash
 $ git clone https://github.com/EAimTY/bing-dict-telegram-bot && cd bing-dict-telegram-bot

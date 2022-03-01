@@ -1,49 +1,28 @@
-use super::{Context, Handler, HandlerError};
-use tgbot::{
-    methods::SendMessage,
-    types::{Message, MessageKind},
-};
+use super::Context;
+use anyhow::Result;
+use tgbot::{methods::SendMessage, types::Message};
 
-impl Handler {
-    pub async fn handle_message(context: &Context, message: Message) -> Result<(), HandlerError> {
-        let chat_id = message.get_chat_id();
-        let message_id = message.id;
+pub async fn handle_message(cx: &Context, msg: &Message) -> Result<()> {
+    if let Some(text) = msg.get_text() {
+        let chat_id = msg.get_chat_id();
+        let msg_id = msg.id;
 
-        let message_trigger = context.message_trigger.read().await;
+        if cx.message_trigger.read().contains(&chat_id) {
+            let input = text.data.replace(&cx.username, "");
 
-        if message_trigger.contains(&chat_id) {
-            let text = message.get_text().unwrap().data.trim();
-            let mut input = None;
+            let res = if !input.is_empty() {
+                bing_dict::translate(&input).await?.map_or_else(
+                    || String::from("No paraphrase found"),
+                    |paraphrase| paraphrase.to_string(),
+                )
+            } else {
+                String::from("No input")
+            };
 
-            if !matches!(message.kind, MessageKind::Group { .. })
-                && !matches!(message.kind, MessageKind::Supergroup { .. })
-            {
-                input = Some(text);
-            }
-
-            if text.starts_with(&context.bot_username) {
-                input = Some(text[context.bot_username.len()..].trim_start());
-            } else if text.ends_with(&context.bot_username) {
-                input = Some(text[..text.len() - context.bot_username.len()].trim_end());
-            }
-
-            if let Some(input) = input {
-                let result = if !input.is_empty() {
-                    bing_dict::translate(input).await?.map_or_else(
-                        || String::from("No paraphrase found"),
-                        |paraphrase| paraphrase.to_string(),
-                    )
-                } else {
-                    String::from("No input")
-                };
-
-                context
-                    .api
-                    .execute(SendMessage::new(chat_id, result).reply_to_message_id(message_id))
-                    .await?;
-            }
+            let send_message = SendMessage::new(chat_id, res).reply_to_message_id(msg_id);
+            cx.api.execute(send_message).await?;
         }
-
-        Ok(())
     }
+
+    Ok(())
 }
